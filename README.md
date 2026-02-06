@@ -33,3 +33,19 @@ As an example, I used 50 Russian cities with the highest population. Data is ext
 ## How to use
 
 ## Troubleshooting
+If you ran all services, sign in Airflow service and saw no DAGs, try out the following commands:
+Simple method
+```bash
+docker compose restart airflow
+```
+Alternative methods: without and with volumes deletion
+```bash
+docker compose down airflow
+```
+```bash
+docker compose down -v airflow
+```
+If commands above didn't help, turn off and then turn on again all containters
+```bash
+docker compose down -v
+```
