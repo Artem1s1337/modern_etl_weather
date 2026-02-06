@@ -25,7 +25,7 @@ As an example, I used 50 Russian cities with the highest population. Data is ext
 - Data loading (to raw layer and to analytical layer) is implemented by the fastest methods: COPY FROM for Greenplum and clickhouse_driver for Clickhouse
 - Data is transformed with pandas
 - Clickhouse table based on ReplacingMergeTree (upsert mechanism) to get rid of duplicated records (if you need it)
-- Airflow orchestrated whole process with four DAGs: insert dimensions (cities, weather conditions), insert fact table and load data to Clickhouse (transform + join + load)
+- Airflow orchestrated whole process with four DAGs: insert dimensions (cities, weather conditions), insert fact table and load data to Clickhouse (transform + join + load). Meta data is collected and loaded only once. Forecast data extracted, transformed and loaded daily
 - You can view data by using Cloud Dbeaver UI
 - Whole pipline work in isolated environment and network supported by Docker and Docker Compose
 - Project dependencies installed with Python package manager called Poetry
