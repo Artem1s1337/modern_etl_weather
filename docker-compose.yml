@@ -50,7 +50,7 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
     volumes:
-      - ./postgres:/var/lib/postgresql/data
+      - psql_data:/var/lib/postgresql/data
     networks:
       - etl_network
     healthcheck:
@@ -100,7 +100,7 @@ services:
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
       CLICKHOUSE_DB: ${CLICKHOUSE_DB}
     volumes:
-      - ./ch_data:/var/lib/clickhouse
+      - ch_data:/var/lib/clickhouse
       - ./utils/click_init.sql:/docker-entrypoint-initdb.d/click_init.sql
     restart: on-failure
     networks:
@@ -140,5 +140,5 @@ volumes:
   db_data:
   gpdb_data:
   ch_data:
-  postgres:
+  psql_data:
   metabase_data:
