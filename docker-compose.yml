@@ -1,0 +1,144 @@
+services:
+  # UI service for databases
+  dbeaver:
+    image: dbeaver/cloudbeaver:25
+    container_name: databases_ui
+    ports:
+      - "8080:8978"
+    volumes:
+      - db_data:/opt/cloudbeaver/workspace
+    restart: always
+    depends_on:
+      - greenplum
+      - postgres
+      - clickhouse
+    networks:
+      - etl_network
+  
+  greenplum:  # host for connection to Cloud DBeaver
+    # Raw MPP database
+    image: woblerr/greenplum:7.1.0
+    container_name: greenplum_db
+    ports:
+      - "5432:5432"
+    environment:
+      TZ: Europe/Moscow
+      GREENPLUM_USER: ${GREENPLUM_USER}
+      GREENPLUM_DEPLOYMENT: singlenode
+      GREENPLUM_DATABASE_NAME: ${GREENPLUM_DATABASE_NAME}
+      GREENPLUM_PASSWORD: ${GREENPLUM_PASSWORD}
+    volumes:
+      - gpdb_data:/data
+      - ./utils/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - etl_network
+    healthcheck:
+      test: ["CMD", "psql", "-U", "${GREENPLUM_USER}", "-d", "${GREENPLUM_DATABASE_NAME}", "-c", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  postgres:
+    # Airflow metadata database
+    image: postgres:13
+    container_name: airflow_metadata
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: airflow_db
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    networks:
+      - etl_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow", "-d", "airflow_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  
+  airflow:
+    # Airflow service for orchestration
+    image: apache/airflow:3.0.0
+    container_name: airflow_service
+    ports:
+      - "8000:8080"
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow_db
+      AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: 30
+      TZ: Europe/Moscow
+      GREENPLUM_USER: ${GREENPLUM_USER}
+      GREENPLUM_DEPLOYMENT: singlenode
+      GREENPLUM_DATABASE_NAME: ${GREENPLUM_DATABASE_NAME}
+      GREENPLUM_PASSWORD: ${GREENPLUM_PASSWORD}
+      API_KEY: ${API_KEY}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+    depends_on:
+      - postgres
+    networks:
+      - etl_network
+    command: >
+      bash -c "pip install clickhouse-driver && airflow db migrate && airflow standalone"
+  
+  clickhouse:
+    # OLAP database for forecast analytics
+    image: clickhouse/clickhouse-server:25.3-alpine
+    container_name: olap_database
+    ports:
+      - "8123:8123" # http api
+      - "9000:9000" # native
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+    volumes:
+      - ./ch_data:/var/lib/clickhouse
+      - ./utils/click_init.sql:/docker-entrypoint-initdb.d/click_init.sql
+    restart: on-failure
+    networks:
+      - etl_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  metabase:
+    image: metabase/metabase:v0.58.x
+    container_name: metabase
+    ports:
+      - "3000:3000"
+    volumes:
+      - metabase_data:/metabase-data
+    environment:
+      MB_DB_TYPE: h2
+      MB_DB_FILE: /metabase-data/metabase.db
+    depends_on:
+      - clickhouse
+    networks:
+      - etl_network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "-I", "http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+networks:
+  etl_network:
+    driver: bridge
+
+volumes:
+  db_data:
+  gpdb_data:
+  ch_data:
+  postgres:
+  metabase_data:
