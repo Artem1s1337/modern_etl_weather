@@ -73,9 +73,20 @@ Run the porject by the following line
 ```bash
 docker compose up -d
 ```
+Open three services in Docker by clicking on links: `Cloud DBeaver`, `Airflow` and `Metabase`:
+1. Sign in Cloud Dbeaver, set up connection parameters and connect to `Greenplum` and `Clickhouse` databases using credentials from the `.env` file
+2. Open Airflow link, fill in username as `admin` and password (you can find it in logs using CTRL + F)
+3. Run the DAGs: `extract_and_insert_conditions`, `extract_and_insert_cities`, `extract_and_insert_forecast` and `transform_and_load_to_olap`
+4. Open Metabase, register and you're done! Feel free to create an analytical dashboard :)
+
 In the end you can get a beautiful and informative dashboard. For instance, I got something like this:
 <img width="1132" height="871" alt="{813A182B-A396-4F40-BC0F-CF747103F1AA}" src="https://github.com/user-attachments/assets/19ccd194-3dda-4761-8a17-089f232a4bc4" />
 
+To turn the services off use the commands below
+```bash
+docker compose down
+docker compose down -v  # with the volumes deletion
+```
 ## Troubleshooting
 If you ran all services, sign in Airflow service and saw no DAGs, try out the following commands:
 
