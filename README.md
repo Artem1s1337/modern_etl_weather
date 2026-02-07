@@ -31,6 +31,48 @@ As an example, I used 50 Russian cities with the highest population. Data is ext
 - Project dependencies installed with Python package manager called Poetry
 
 ## How to use
+Before you launch the whole pipeline, make sure you have WSL and Docker installed. Also go to the [OpenWeatherMap](https://old.openweathermap.org) website and register you personal API key to get the data.
+### Set up environment
+Clone repository to your local folder and open it
+```bash
+git clone https://github.com/Artem1s1337/modern_etl_weather.git
+cd path/to_your_folder
+```
+Copy `.env.example` as `.env` file with the following command
+```bash
+cp .env.example .env
+```
+Fill in variable values. DO NOT CHANGE THE VARIABLE NAMES!
+```bash
+# API key for authorization
+API_KEY=  <-- put here your generated API key
+
+# Greenplum credentials
+GREENPLUM_USER=
+GREENPLUM_PASSWORD=
+GREENPLUM_DATABASE_NAME=
+
+# Clickhouse credentials
+CLICKHOUSE_USER=
+CLICKHOUSE_PASSWORD=
+CLICKHOUSE_DB=
+```
+Then install Poetry package manager using `pip` or `sudo` or `pipx` [(more details)](https://python-poetry.org/docs/#installation) and upgrade `pip`
+```bash
+pip install poetry
+python.exe -m pip install --upgrade pip
+```
+Configure your virtual environment and install necessary packages
+```bash
+poetry config virtualenvs.in-project true
+poetry env activate
+poetry env list  # to check activation status
+poetry install --no-root
+```
+Run the porject by the following line
+```bash
+docker compose up -d
+```
 In the end you can get a beautiful and informative dashboard. For instance, I got something like this:
 <img width="1132" height="871" alt="{813A182B-A396-4F40-BC0F-CF747103F1AA}" src="https://github.com/user-attachments/assets/19ccd194-3dda-4761-8a17-089f232a4bc4" />
 
