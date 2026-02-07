@@ -31,6 +31,8 @@ As an example, I used 50 Russian cities with the highest population. Data is ext
 - Project dependencies installed with Python package manager called Poetry
 
 ## How to use
+In the end you can get a beautiful and informative dashboard. For instance, I got something like this:
+<img width="1132" height="871" alt="{813A182B-A396-4F40-BC0F-CF747103F1AA}" src="https://github.com/user-attachments/assets/19ccd194-3dda-4761-8a17-089f232a4bc4" />
 
 ## Troubleshooting
 If you ran all services, sign in Airflow service and saw no DAGs, try out the following commands:
