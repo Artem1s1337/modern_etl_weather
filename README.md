@@ -36,7 +36,7 @@ Before you launch the whole pipeline, make sure you have WSL and Docker installe
 Clone repository to your local folder and open it
 ```bash
 git clone https://github.com/Artem1s1337/modern_etl_weather.git
-cd path/to_your_folder
+cd modern_etl_weather
 ```
 Copy `.env.example` as `.env` file with the following command
 ```bash
