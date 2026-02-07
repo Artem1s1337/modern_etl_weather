@@ -69,7 +69,7 @@ poetry env activate
 poetry env list  # to check activation status
 poetry install --no-root
 ```
-Run the porject by the following line
+Enter the WSL2 by using `wsl` in terminal and run the porject by the following line
 ```bash
 docker compose up -d
 ```
