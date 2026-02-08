@@ -102,6 +102,3 @@ docker compose down airflow
 docker compose down -v airflow
 ```
 If commands above didn't help, turn off and then turn on again all containters
-```bash
-docker compose down -v
-```
