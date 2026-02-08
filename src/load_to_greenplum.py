@@ -24,42 +24,48 @@ def insert_cities(conn, cursor):
     c = get_extractions()
     meta_cities = c.get_cities_chunked()
     
-    output = io.StringIO()
-    meta_cities.to_csv(output, sep='\t', header=False, index=False)
-    bytes_buffer = io.BytesIO(output.getvalue().encode('utf-8'))
+    meta_cities = meta_cities.where(pd.notnull(meta_cities), None)
+    lst_of_tuples = list(meta_cities.itertuples(index=False, name=None))
 
-    cursor.copy_expert("COPY dim_cities FROM STDIN WITH (FORMAT csv, DELIMITER '\t')", bytes_buffer)
+    insert_query = '''
+        INSERT INTO dim_cities (city_id, city_name, latitude, longitude)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT (city_id) DO NOTHING;
+    '''
+
+    cursor.executemany(insert_query, lst_of_tuples)
     conn.commit()
 
 def insert_conditions(conn, cursor):
 
     c = get_extractions()
     meta_weather = c.get_conditions()
+    meta_weather = meta_weather.where(pd.notnull(meta_weather), None)
+    lst_of_tuples = list(meta_weather.itertuples(index=False, name=None))
 
-    output = io.StringIO()
-    meta_weather.to_csv(output, sep='\t', header=False, index=False)
-    bytes_buffer = io.BytesIO(output.getvalue().encode('utf-8'))
+    insert_query = '''
+        INSERT INTO dim_weather (weather_id, main, description)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (weather_id) DO NOTHING;
+    '''
 
-    cursor.copy_expert("COPY dim_weather FROM STDIN WITH (FORMAT csv, DELIMITER '\t')", bytes_buffer)
+    cursor.executemany(insert_query, lst_of_tuples)
     conn.commit()
 
 def insert_forecast(conn, cursor):
 
     c = get_extractions()
     forecast = c.get_forecast_chunked()
-    cols = forecast.columns
-
     forecast = forecast.where(pd.notnull(forecast), None)
+    lst_of_tuples = list(forecast.itertuples(index=False, name=None))
 
-    csv_io = io.StringIO()
-    forecast.to_csv(csv_io, sep='\t', header=False, index=False, na_rep='\\N')
-    csv_io.seek(0)
+    insert_query = '''
+        INSERT INTO raw_weather (dt, temp, feels_like, temp_min, temp_max, pressure, humidity, weather_id, clouds, wind_speed, wind_deg, wind_gust, visibility, city_id, sunrise, sunset, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (city_id, dt) DO NOTHING;
+    '''
 
-    cursor.copy_from(
-        csv_io, 
-        'raw_weather',
-        columns=cols
-    )
+    cursor.executemany(insert_query, lst_of_tuples)
     conn.commit()
 
 def load_cities():
